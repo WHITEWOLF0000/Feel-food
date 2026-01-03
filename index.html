@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FEEL FOOD - Menu (Bosh Sahifa)</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ========================================================= */
+        /* GLOBAL USLUBLAR VA RANG PALITRASI */
+        /* ========================================================= */
+        body { 
+            margin: 0; padding: 0; 
+            background-color: #f7f7f7; 
+            font-family: Arial, sans-serif;
+            /* Animatsiya tugagach, pastga joy qolishi uchun */
+            padding-bottom: 70px; 
+            overflow-x: hidden;
+        }
+        :root {
+            --brand-color: #ff5722; 
+            --brand-dark: #e64a19;
+            --text-color: #333;
+        }
+        
+        /* ----------------------------------------------------
+         * 1. 3D PRELOADER CSS USLUBLARI VA ANIMATSIYALARI
+         * ----------------------------------------------------
+         */
+        #preloader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--brand-color); 
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; opacity: 1; transition: opacity 0.8s ease-in-out; 
+            perspective: 1000px; 
+        }
+
+        .logo-container {
+            text-align: center; color: white; font-family: 'Poppins', sans-serif; 
+            font-weight: 800; line-height: 0.9; transform: scale(0.9);
+            padding-bottom: 20px; transform-style: preserve-3d; 
+        }
+
+        .logo-word { display: flex; justify-content: center; }
+        .logo-char {
+            display: inline-block; font-size: 85px; opacity: 0;
+            transform: rotateX(90deg) translateY(50px) scale(0.5); 
+            transform-origin: bottom center; 
+            animation: char-3d-appear 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+
+        .feel-word .logo-char { animation-delay: calc(var(--index) * 0.1s); }
+        .food-word .logo-char { animation-delay: calc(0.5s + var(--index) * 0.1s); }
+
+        .logo-word.food-word { margin-bottom: 10px; }
+
+        .giggle-line {
+            width: 100px; height: 50px; 
+            border: 8px solid white;
+            border-top: none; 
+            border-radius: 0 0 100px 100px; 
+            margin: -5px auto 0; 
+            transform: scale(0) rotateX(90deg); 
+            transform-origin: center;
+            animation: smile-3d-appear 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            animation-delay: 1.2s; 
+        }
+        
+        @keyframes char-3d-appear {
+            100% { opacity: 1; transform: rotateX(0deg) translateY(0px) scale(1); }
+        }
+
+        @keyframes smile-3d-appear {
+            0% { transform: scale(0.1) rotateX(90deg); opacity: 0; }
+            50% { transform: scale(1.1) rotateX(-10deg); opacity: 1; }
+            100% { transform: scale(1) rotateX(0deg); opacity: 1; }
+        }
+        
+        /* ASOSIY KONTENT: Animatsiya tugaguncha yashirilgan */
+        #main-content {
+            display: none; 
+            min-height: 100vh; /* Agar kontent kam bo'lsa ham butun oynani egallash uchun */
+        }
+        
+        /* ----------------------------------------------------
+         * 2. ASOSIY SAHIFA CSS USLUBLARI (OLDINGI KODDAN)
+         * ----------------------------------------------------
+         */
+        .page-title, .category-tabs, .food-grid { max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 15px; }
+        .page-title { margin-top: 30px; margin-bottom: 20px; font-weight: bold; color: var(--brand-color); font-size: 28px; }
+        .category-tabs { display: flex; overflow-x: auto; white-space: nowrap; margin-bottom: 20px; padding: 0 10px; -webkit-overflow-scrolling: touch; }
+        .tab-btn { flex-shrink: 0; border: 1px solid #ddd; background-color: white; padding: 8px 12px; margin-right: 10px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.3s; }
+        .tab-btn.active { background-color: var(--brand-color); color: white; border-color: var(--brand-color); }
+        .food-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .product-card { background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; }
+        
+        /* Mobil uslublar */
+        @media (max-width: 768px) {
+            .food-grid { grid-template-columns: 1fr; gap: 15px; } 
+            .product-card { flex-direction: row; height: 110px; }
+            .image-placeholder { width: 110px; height: 100%; border-right: 1px solid #eee; border-bottom: none; }
+            .info-block { padding: 10px 10px; }
+            .product-name { font-size: 16px; margin-bottom: 5px; }
+            .price-add-row { padding-top: 5px; }
+            .add-control-wrapper { align-items: center; }
+            .add-btn { display: none; } 
+            .quantity-control { display: flex !important; }
+        }
+        .image-placeholder { width: 100%; height: 150px; background-color: #eee; border-bottom: 1px solid #eee; }
+        .info-block { padding: 10px 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-name { margin: 0 0 10px 0; font-weight: 600; color: var(--text-color); }
+        .price-add-row { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+        .price { color: var(--brand-dark); font-size: 18px; font-weight: bold; }
+        .add-control-wrapper { display: flex; align-items: center; gap: 10px; }
+        .add-btn { background-color: var(--brand-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; transition: background-color 0.3s; }
+        .quantity-control { display: none; align-items: center; background: #f0f0f0; padding: 3px; border-radius: 20px; }
+        .quantity-btn { background: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; color: var(--brand-color); font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .quantity-display { font-weight: bold; padding: 0 5px; color: var(--text-color); }
+        
+        /* Pastki Navigatsiya */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background-color: white; box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); display: flex; justify-content: space-around; align-items: center; padding: 0 10px; z-index: 2000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; padding: 0 20px; }
+        .nav-item .icon { font-size: 24px; margin-bottom: 3px;}
+        .active-bottom { color: var(--brand-color); }
+        .order-floating { width: 55px; height: 55px; border-radius: 50%; background-color: var(--brand-color); color: white; border: 5px solid white; font-size: 22px; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); cursor: pointer; z-index: 2001; display: flex; justify-content: center; align-items: center; text-decoration: none; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="preloader">
+        <div class="logo-container">
+            <div class="logo-word feel-word">
+                <span class="logo-char">F</span><span class="logo-char">E</span><span class="logo-char">E</span><span class="logo-char">L</span><span class="logo-char">.</span>
+            </div>
+            <div class="logo-word food-word">
+                <span class="logo-char">F</span><span class="logo-char">O</span><span class="logo-char">O</span><span class="logo-char">D</span>
+            </div>
+            <div class="giggle-line"></div>
+        </div>
+    </div>
+    
+    <div id="main-content">
+        <h1 class="page-title">FEEL FOOD Menu</h1>
+
+        <div class="category-tabs" id="categoryTabs">
+            <button class="tab-btn active" data-category="all">Barchasi</button>
+            <button class="tab-btn" data-category="lavash">🥙 Lavash</button>
+            <button class="tab-btn" data-category="burger">🍔 Burger</button>
+            <button class="tab-btn" data-category="hotdog">🌭 Xot-dog</button>
+            <button class="tab-btn" data-category="pizza">🍕 Pitsa</button>
+        </div>
+
+        <div class="food-grid" id="foodGrid"></div>
+        
+        <div class="bottom-nav">
+            <a href="index.html" class="nav-item active-bottom">
+                <span class="icon">🏠</span>
+                <span>Asosiy</span>
+            </a>
+            <a href="cart.html" class="order-floating">
+                🛒
+                <span class="cart-count" id="cartCount">0</span>
+            </a>
+            <a href="profile.html" class="nav-item">
+                <span class="icon">👤</span>
+                <span>Profil</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const products = [
+            { id: 1, name: "Mol go'shtli Lavash", price: 32000, category: "lavash", imgColor: '#FFC107' },
+            { id: 2, name: "Pishloqli Lavash", price: 37000, category: "lavash", imgColor: '#FFD54F' },
+            { id: 3, name: "Tovuqli Lavash", price: 30000, category: "lavash", imgColor: '#FFA000' },
+            { id: 4, name: "Classic Beef Burger", price: 45000, category: "burger", imgColor: '#e64a19' },
+            { id: 5, name: "Cheeseburger", price: 25000, category: "burger", imgColor: '#ff5722' },
+            { id: 6, name: "Pepperoni Pitsa", price: 65000, category: "pizza", imgColor: '#F44336' },
+            { id: 7, name: "Standart Xot-dog", price: 18000, category: "hotdog", imgColor: '#FF9800' },
+        ];
+        
+        // --- Savatcha Boshqaruvi ---
+        function getCart() {
+            const storedCart = localStorage.getItem('feelFoodCart');
+            return storedCart ? JSON.parse(storedCart) : [];
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem('feelFoodCart', JSON.stringify(cart));
+            updateCartUI(); 
+            const activeCategory = document.querySelector('.tab-btn.active')?.dataset.category || 'all';
+            renderProducts(activeCategory); 
+        }
+
+        function updateQty(productId, delta) {
+            let cart = getCart();
+            const index = cart.findIndex(item => item.id === productId);
+
+            if (index !== -1) {
+                cart[index].quantity += delta;
+                
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+            } else if (delta > 0) {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    cart.push({ id: productId, name: product.name, price: product.price, quantity: 1 });
+                }
+            }
+            saveCart(cart);
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); 
+        }
+
+        function getQuantity(productId) {
+            const cart = getCart();
+            const item = cart.find(item => item.id === productId);
+            return item ? item.quantity : 0;
+        }
+
+        // --- Mahsulotlarni Chizish ---
+        function renderProducts(filterCategory = 'all') {
+            const foodGrid = document.getElementById('foodGrid');
+            foodGrid.innerHTML = ''; 
+            let htmlContent = '';
+
+            products.forEach(product => {
+                const isMatch = filterCategory === 'all' || product.category === filterCategory;
+                const currentQuantity = getQuantity(product.id);
+                const isAdded = currentQuantity > 0;
+                
+                if (isMatch) {
+                    htmlContent += `
+                        <div class="product-card" data-category="${product.category}">
+                            <div class="image-placeholder" style="background-color: ${product.imgColor};"></div> 
+                            <div class="info-block">
+                                <p class="product-name">${product.name}</p>
+                                <div class="price-add-row">
+                                    <span class="price">${product.price.toLocaleString('uz-UZ')} so'm</span>
+                                    
+                                    <div class="add-control-wrapper">
+                                        <button 
+                                            class="add-btn" 
+                                            data-id="${product.id}"
+                                            style="display: ${isAdded ? 'none' : 'block'};"
+                                            onclick="updateQty(${product.id}, 1)">
+                                            + Qo'shish
+                                        </button>
+                                        
+                                        <div class="quantity-control" id="control-${product.id}" 
+                                            style="display: ${isAdded ? 'flex' : 'none'};">
+                                            
+                                            <button class="quantity-btn" onclick="updateQty(${product.id}, -1)">-</button>
+                                            <span class="quantity-display" id="qty-${product.id}">${currentQuantity}</span>
+                                            <button class="quantity-btn" onclick="updateQty(${product.id}, 1)">+</button>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            foodGrid.innerHTML = htmlContent;
+        }
+
+        // --- UI Yangilash ---
+        function updateCartUI() {
+            const cart = getCart();
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartCountElement = document.getElementById('cartCount');
+            
+            cartCountElement.textContent = totalItems;
+            cartCountElement.style.display = totalItems > 0 ? 'flex' : 'none'; 
+        }
+
+        // --- Kategoriyalar Tab Boshqaruvi ---
+        const categoryTabs = document.getElementById('categoryTabs');
+        categoryTabs.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                const category = e.target.dataset.category;
+                renderProducts(category);
+            }
+        });
+
+        // --- Sahifani Yuklash Mantiqi (Preloader bilan) ---
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Telegram.WebApp) {
+                window.Telegram.WebApp.expand();
+            }
+            
+            // 3D animatsiya uchun harflarni indekslash
+            document.querySelectorAll('.logo-char').forEach((char, index) => {
+                char.style.setProperty('--index', index);
+            });
+
+            const preloader = document.getElementById('preloader');
+            const mainContent = document.getElementById('main-content');
+            
+            // Eng uzoq animatsiya tugash vaqti
+            const totalAnimationTime = 2000; // 2.0 sekund
+
+            setTimeout(function() {
+                // Preloaderni o'chirishni boshlash
+                preloader.style.opacity = '0';
+                
+                // Asosiy kontentni ko'rsatish
+                mainContent.style.display = 'block';
+                document.body.style.overflow = 'auto'; // Skrollni yoqish
+
+                // Kontentni chizish va UI yangilash (animatsiya tugagandan so'ng)
+                renderProducts('all'); 
+                updateCartUI();
+                
+                // Preloader elementini DOM'dan butunlay olib tashlash
+                setTimeout(function() {
+                    preloader.remove();
+                }, 800); // CSSdagi opacity o'tish vaqti (0.8s)
+                
+            }, totalAnimationTime); 
+        });
+    </script>
+</body>
+</html>

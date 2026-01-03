@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FEEL FOOD - Profil</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* CSS USLUBLARI AVVALGI KODDAN O'ZGARIShSIZ QOLDI */
+        :root { --brand-color: #ff5722; --brand-light: #ff7043; --brand-dark: #e64a19; --text-color: #333; --sub-text-color: #6c757d; --bg: #f7f7f7; --white: #fff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 15px; background-color: var(--bg); font-family: 'Segoe UI', Arial, sans-serif; padding-bottom: 70px; overflow-x: hidden; color: var(--text-color); }
+        .page-header { display: flex; align-items: center; margin-top: 15px; margin-bottom: 30px; }
+        .back-btn { background: none; border: none; font-size: 24px; color: var(--brand-color); cursor: pointer; padding: 0; margin-right: 10px; transition: transform 0.1s; }
+        .page-title { font-weight: 700; font-size: 26px; color: var(--text-color); margin: 0; }
+        .profile-card { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; color: var(--text-color); margin-bottom: 15px; border-left: 4px solid var(--brand-color); padding-left: 10px; }
+        .user-info { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; padding: 10px; }
+        .user-avatar { width: 70px; height: 70px; border-radius: 50%; background-color: var(--brand-light); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--white); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .user-details strong { display: block; font-size: 18px; font-weight: 700; color: var(--text-color); }
+        .user-details span { font-size: 14px; color: var(--sub-text-color); }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; cursor: pointer; transition: background-color 0.1s; }
+        .list-item:last-child { border-bottom: none; }
+        .list-item:active { background-color: var(--bg); }
+        .list-info p { margin: 0; font-size: 15px; font-weight: 500; }
+        .list-info small { color: var(--sub-text-color); font-size: 12px; }
+        .list-icon { color: var(--brand-color); font-size: 18px; }
+        .empty-state { text-align: center; color: #ccc; padding: 20px 0; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background-color: var(--white); box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); display: flex; justify-content: space-around; align-items: center; padding: 0 10px; z-index: 2000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; padding: 0 20px; }
+        .nav-item .icon { font-size: 24px; margin-bottom: 3px;}
+        .active-bottom { color: var(--brand-color); } 
+        .order-floating { width: 55px; height: 55px; border-radius: 50%; background-color: var(--brand-color); color: var(--white); border: 5px solid var(--white); font-size: 22px; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); cursor: pointer; z-index: 2001; display: flex; justify-content: center; align-items: center; text-decoration: none; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: red; color: var(--white); border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goToIndex()">&#8592;</button>
+        <h1 class="page-title">Profilim</h1>
+    </div>
+
+    <div id="profile-content">
+        
+        <div class="profile-card user-info">
+            <div class="user-avatar">👤</div>
+            <div class="user-details">
+                <strong id="user-name">Foydalanuvchi Nomi</strong>
+                <span id="user-id">ID: 123456789</span>
+            </div>
+        </div>
+        
+        <div class="profile-card">
+            <h2 class="section-title">Shaxsiy Ma'lumotlar</h2>
+            
+            <div class="list-item" onclick="tg.showAlert('Manzillarni boshqarish funksiyasi hali qo\'shilmagan.')">
+                <div class="list-info">
+                    <p>Mening manzillarim</p>
+                    <small>Yetkazib berish manzillarini boshqarish</small>
+                </div>
+                <span class="list-icon">&gt;</span>
+            </div>
+            
+            <div class="list-item" onclick="tg.showAlert('Telefon raqamini tahrirlash funksiyasi hali qo\'shilmagan.')">
+                <div class="list-info">
+                    <p>Telefon raqamim</p>
+                    <small id="user-phone-display">Raqam aniqlanmagan</small>
+                </div>
+                <span class="list-icon">&gt;</span>
+            </div>
+            
+        </div>
+
+        <div class="profile-card">
+            <h2 class="section-title">Buyurtmalar Tarixi</h2>
+            
+            <div class="empty-state">
+                Hozircha faol buyurtmalaringiz yo'q.
+            </div>
+        </div>
+
+    </div>
+
+    <div class="bottom-nav">
+        <a href="index.html" class="nav-item" onclick="sessionStorage.setItem('animationShown', 'true')">
+            <span class="icon">🏠</span>
+            <span>Asosiy</span>
+        </a>
+        <a href="cart.html" class="order-floating">
+            🛒
+            <span class="cart-count" id="cartCount">0</span>
+        </a>
+        <a href="profile.html" class="nav-item active-bottom">
+            <span class="icon">👤</span>
+            <span>Profil</span>
+        </a>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        function goToIndex() {
+            // Orqaga qaytishdan oldin ham animatsiyani o'chiramiz
+            sessionStorage.setItem('animationShown', 'true');
+            window.location.href = 'index.html';
+        }
+
+        function getCart() {
+            const storedCart = localStorage.getItem('feelFoodCart');
+            return storedCart ? JSON.parse(storedCart) : [];
+        }
+
+        function updateCartUI() {
+            const cart = getCart();
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartCountElement = document.getElementById('cartCount');
+            
+            if (cartCountElement) {
+                cartCountElement.textContent = totalItems;
+                cartCountElement.style.display = totalItems > 0 ? 'flex' : 'none'; 
+            }
+        }
+
+        function loadUserProfile() {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const user = tg.initDataUnsafe.user;
+                
+                let userName = user.first_name;
+                if (user.last_name) { userName += " " + user.last_name; }
+                
+                document.getElementById('user-name').innerText = userName;
+                document.getElementById('user-id').innerText = `@${user.username || 'username yo\'q'}`;
+                
+                const phoneDisplay = document.getElementById('user-phone-display');
+                if (phoneDisplay) {
+                     phoneDisplay.innerText = "Kiritilmagan (Qo'shish uchun bosing)";
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartUI();
+            loadUserProfile();
+            // Profil sahifasi yuklanganda ham animatsiyani o'chirib qo'yish
+            sessionStorage.setItem('animationShown', 'true');
+        });
+    </script>
+</body>
+</html>

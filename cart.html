@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FEEL FOOD - Savatcha</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* ========================================================= */
+        /* CSS USLUBLARI */
+        /* ========================================================= */
+        :root { --brand-color: #ff5722; --brand-dark: #e64a19; --text-color: #333; --bg: #f7f7f7; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 15px; background-color: var(--bg); font-family: Arial, sans-serif; padding-bottom: 220px; overflow-x: hidden; color: var(--text-color); }
+        .page-header { display: flex; align-items: center; margin-top: 15px; margin-bottom: 25px;}
+        
+        /* 🔥 ORQAGA TUGMASI (STRELKA) USLUBI */
+        .back-btn { 
+            background: none; 
+            border: none; 
+            font-size: 24px; 
+            color: var(--brand-color); 
+            cursor: pointer; 
+            padding: 0; 
+            margin-right: 10px;
+            transition: transform 0.1s;
+        }
+        .back-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .page-title { font-weight: bold; font-size: 22px; color: var(--brand-color); margin: 0;}
+        .cart-item { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
+        .cart-item img { 
+            width: 70px; 
+            height: 70px; 
+            border-radius: 8px; 
+            object-fit: cover; 
+            border: 1px solid #eee;
+        } 
+        .item-info { flex-grow: 1; }
+        .item-info b { display: block; font-size: 15px; color: var(--text-color); margin-bottom: 5px; }
+        .item-info span { color: var(--brand-dark); font-weight: bold; font-size: 14px; }
+        .counter { display: flex; align-items: center; gap: 5px; background: #f0f0f0; padding: 3px; border-radius: 20px; }
+        .count-btn { background: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; color: var(--brand-color); font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .counter span { font-weight: bold; padding: 0 5px; color: var(--text-color); }
+        .empty-cart { text-align: center; margin-top: 50px; color: #999; font-size: 16px; }
+        .cart-summary-fixed { position: fixed; bottom: 65px; left: 0; right: 0; background: transparent; padding: 15px 15px 0 15px; z-index: 1500; }
+        .summary-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .summary-total { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
+        #total-price-display { font-size: 18px; color: var(--brand-dark); font-weight: bold !important; }
+        #order-btn { width: 100%; background-color: var(--brand-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 3px 10px rgba(255, 87, 34, 0.4); transition: all 0.1s ease; }
+        #order-btn:active { transform: scale(0.98); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background-color: white; box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); display: flex; justify-content: space-around; align-items: center; padding: 0 10px; z-index: 2000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; padding: 0 20px; }
+        .nav-item .icon { font-size: 24px; margin-bottom: 3px;}
+        .order-floating { width: 55px; height: 55px; border-radius: 50%; background-color: var(--brand-color); color: white; border: 5px solid white; font-size: 22px; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); cursor: pointer; z-index: 2001; display: flex; justify-content: center; align-items: center; text-decoration: none; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goToIndex()">&#8592;</button>
+        <h1 class="page-title">Savatcha</h1>
+    </div>
+
+    <div id="cart-items">
+        </div>
+
+    <div id="cart-footer" class="cart-summary-fixed" style="display: none;">
+        <div class="summary-box">
+            <div class="summary-total">
+                <span style="color: #636e72;">Jami summa:</span>
+                <b id="total-price-display">0 so'm</b>
+            </div>
+            <button id="order-btn">
+                Buyurtma berish
+            </button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="index.html" class="nav-item" onclick="sessionStorage.setItem('animationShown', 'true')">
+            <span class="icon">🏠</span>
+            <span>Asosiy</span>
+        </a>
+        <a href="cart.html" class="order-floating active-bottom">
+            🛒
+            <span class="cart-count" id="cartCount">0</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <span class="icon">👤</span>
+            <span>Profil</span>
+        </a>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const products = [
+            { id: 1, name: "Mol go'shtli Lavash", price: 32000, category: "lavash", imgUrl: 'https://via.placeholder.com/300x150/ff7043/ffffff?text=LAVASH-BEEF' },
+            { id: 2, name: "Pishloqli Lavash", price: 37000, category: "lavash", imgUrl: 'https://via.placeholder.com/300x150/ff9800/ffffff?text=LAVASH-CHEESE' },
+            { id: 3, name: "Tovuqli Lavash", price: 30000, category: "lavash", imgUrl: 'https://via.placeholder.com/300x150/ffb74d/ffffff?text=LAVASH-CHICKEN' },
+            { id: 4, name: "Classic Beef Burger", price: 45000, category: "burger", imgUrl: 'https://via.placeholder.com/300x150/e64a19/ffffff?text=BURGER-BEEF' },
+            { id: 5, name: "Cheeseburger", price: 25000, category: "burger", imgUrl: 'https://via.placeholder.com/300x150/ff5722/ffffff?text=CHEESEBURGER' },
+            { id: 6, name: "Pepperoni Pitsa", price: 65000, category: "pizza", imgUrl: 'https://via.placeholder.com/300x150/F44336/ffffff?text=PIZZA' },
+            { id: 7, name: "Standart Xot-dog", price: 18000, category: "hotdog", imgUrl: 'https://via.placeholder.com/300x150/FF9800/ffffff?text=HOTDOG' },
+        ];
+
+
+        function getCart() {
+            const storedCart = localStorage.getItem('feelFoodCart');
+            return storedCart ? JSON.parse(storedCart) : [];
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem('feelFoodCart', JSON.stringify(cart));
+            renderCart(); 
+        }
+        
+        // 🔥 Yuqoridagi strelka bosilganda ishlaydigan funksiya
+        function goToIndex() {
+            // Orqaga qaytishdan oldin animatsiyani o'chiramiz
+            sessionStorage.setItem('animationShown', 'true');
+            window.location.href = 'index.html';
+        }
+
+        function renderCart() {
+            const cart = getCart();
+            const container = document.getElementById('cart-items');
+            const footer = document.getElementById('cart-footer');
+            let total = 0;
+            container.innerHTML = '';
+            
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="empty-cart"><p style="font-size: 50px;">🛒</p><p>Savatchangiz hozircha bo'sh</p></div>`;
+                footer.style.display = 'none';
+            } else {
+                cart.forEach(item => {
+                    const product = products.find(p => p.id === item.id);
+                    if (product) {
+                        const subTotal = product.price * item.quantity;
+                        total += subTotal;
+                        
+                        container.innerHTML += `
+                            <div class="cart-item">
+                                <img src="${product.imgUrl}" alt="${product.name}">
+                                <div class="item-info">
+                                    <b>${product.name}</b>
+                                    <span>${subTotal.toLocaleString('uz-UZ')} so'm</span>
+                                </div>
+                                <div class="counter">
+                                    <button class="count-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                                    <span>${item.quantity}</span>
+                                    <button class="count-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                document.getElementById('total-price-display').innerText = total.toLocaleString('uz-UZ') + " so'm";
+                footer.style.display = 'block';
+            }
+            
+            updateCartUI();
+        }
+
+        function updateQty(id, delta) {
+            let cart = getCart();
+            const index = cart.findIndex(item => item.id === id);
+
+            if (index !== -1) {
+                cart[index].quantity += delta;
+                
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+            }
+            saveCart(cart);
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        }
+        
+        function updateCartUI() {
+            const cart = getCart();
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartCountElement = document.getElementById('cartCount');
+            
+            if (cartCountElement) {
+                cartCountElement.textContent = totalItems;
+                cartCountElement.style.display = totalItems > 0 ? 'flex' : 'none'; 
+            }
+        }
+        
+        document.getElementById('order-btn').onclick = function() {
+            tg.showAlert("Buyurtma berish sahifasiga o'tish (Hali qo'shilmagan)...");
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCart();
+            // Savatcha sahifasi yuklanganda, asosiy sahifaga qaytishda animatsiya ishlamasligi uchun belgilaymiz.
+            sessionStorage.setItem('animationShown', 'true');
+        });
+    </script>
+</body>
+</html>

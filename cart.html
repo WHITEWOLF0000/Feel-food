@@ -6,34 +6,54 @@
     <title>FEEL FOOD - Savatcha</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* [ ... CSS uslublari o'zgarishsiz qoladi ... ] */
-        :root { --brand-color: #ff5722; --brand-dark: #e64a19; --text-color: #333; --bg: #f7f7f7; }
+        /* ==================== CSS START ==================== */
+        :root { 
+            --brand-color: #ff5722; 
+            --brand-dark: #e64a19; 
+            --text-color: #333; 
+            --bg: #f7f7f7; 
+        }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 15px; background-color: var(--bg); font-family: Arial, sans-serif; padding-bottom: 220px; overflow-x: hidden; color: var(--text-color); }
+        
+        /* Sarlavha va Orqaga tugmasi */
         .page-header { display: flex; align-items: center; margin-top: 15px; margin-bottom: 25px;}
         .back-btn { background: none; border: none; font-size: 24px; color: var(--brand-color); cursor: pointer; padding: 0; margin-right: 10px; transition: transform 0.1s; }
         .back-btn:active { transform: scale(0.9); }
         .page-title { font-weight: bold; font-size: 22px; color: var(--brand-color); margin: 0;}
+        
+        /* Savatcha elementi */
         .cart-item { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
         .cart-item img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; } 
         .item-info { flex-grow: 1; }
         .item-info b { display: block; font-size: 15px; color: var(--text-color); margin-bottom: 5px; }
         .item-info span { color: var(--brand-dark); font-weight: bold; font-size: 14px; }
+        
+        /* Miqdorni boshqarish */
         .counter { display: flex; align-items: center; gap: 5px; background: #f0f0f0; padding: 3px; border-radius: 20px; }
         .count-btn { background: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; color: var(--brand-color); font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .counter span { font-weight: bold; padding: 0 5px; color: var(--text-color); }
+        
+        /* Bo'sh savatcha */
         .empty-cart { text-align: center; margin-top: 50px; color: #999; font-size: 16px; }
+        
+        /* Pastki Panel - Buyurtma va Narx */
         .cart-summary-fixed { position: fixed; bottom: 65px; left: 0; right: 0; background: transparent; padding: 15px 15px 0 15px; z-index: 1500; }
         .summary-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .summary-total { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
         #total-price-display { font-size: 18px; color: var(--brand-dark); font-weight: bold !important; }
+        
+        /* Buyurtma berish tugmasi */
         #order-btn { width: 100%; background-color: var(--brand-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 3px 10px rgba(255, 87, 34, 0.4); transition: all 0.1s ease; }
         #order-btn:active { transform: scale(0.98); }
+
+        /* Bottom Navigatsiya */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background-color: white; box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); display: flex; justify-content: space-around; align-items: center; padding: 0 10px; z-index: 2000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; padding: 0 20px; }
         .nav-item .icon { font-size: 24px; margin-bottom: 3px;}
         .order-floating { width: 55px; height: 55px; border-radius: 50%; background-color: var(--brand-color); color: white; border: 5px solid white; font-size: 22px; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); cursor: pointer; z-index: 2001; display: flex; justify-content: center; align-items: center; text-decoration: none; }
         .cart-count { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: bold; display: none; }
+        /* ==================== CSS END ==================== */
     </style>
 </head>
 <body>
@@ -73,9 +93,11 @@
     </div>
 
     <script>
+        /* ==================== JAVASCRIPT START ==================== */
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Barcha sahifalarda ishlatiladigan mahsulotlar ro'yxati
         const products = [
             { id: 1, name: "Mol go'shtli Lavash", price: 32000, category: "lavash", imgUrl: 'https://via.placeholder.com/300x150/ff7043/ffffff?text=LAVASH-BEEF' },
             { id: 2, name: "Pishloqli Lavash", price: 37000, category: "lavash", imgUrl: 'https://via.placeholder.com/300x150/ff9800/ffffff?text=LAVASH-CHEESE' },
@@ -88,21 +110,40 @@
 
 
         function getCart() {
+            // Savatchani localStorage'dan yuklash
             const storedCart = localStorage.getItem('feelFoodCart');
             return storedCart ? JSON.parse(storedCart) : [];
         }
 
         function saveCart(cart) {
+            // Savatchani localStorage'ga saqlash va UI ni yangilash
             localStorage.setItem('feelFoodCart', JSON.stringify(cart));
             renderCart(); 
         }
         
         function goToIndex() {
+            // Asosiy sahifaga qaytish
             sessionStorage.setItem('animationShown', 'true');
             window.location.href = 'index.html';
         }
 
+        function updateCartUI(totalItems = 0) {
+            // Pastki navigatsiyadagi savatcha sonini yangilash
+            if (totalItems === 0) {
+                const cart = getCart();
+                totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            }
+            
+            const cartCountElement = document.getElementById('cartCount');
+            
+            if (cartCountElement) {
+                cartCountElement.textContent = totalItems;
+                cartCountElement.style.display = totalItems > 0 ? 'flex' : 'none'; 
+            }
+        }
+
         function renderCart() {
+            // Savatcha elementlarini sahifaga joylashtirish
             const cart = getCart();
             const container = document.getElementById('cart-items');
             const footer = document.getElementById('cart-footer');
@@ -111,9 +152,11 @@
             container.innerHTML = '';
             
             if (cart.length === 0) {
+                // Savatcha bo'sh bo'lsa
                 container.innerHTML = `<div class="empty-cart"><p style="font-size: 50px;">🛒</p><p>Savatchangiz hozircha bo'sh</p></div>`;
                 footer.style.display = 'none';
             } else {
+                // Savatchada mahsulotlar bo'lsa
                 cart.forEach(item => {
                     const product = products.find(p => p.id === item.id);
                     if (product) {
@@ -146,6 +189,7 @@
         }
 
         function updateQty(id, delta) {
+            // Mahsulot miqdorini o'zgartirish
             let cart = getCart();
             const index = cart.findIndex(item => item.id === id);
 
@@ -153,29 +197,15 @@
                 cart[index].quantity += delta;
                 
                 if (cart[index].quantity <= 0) {
-                    cart.splice(index, 1);
+                    cart.splice(index, 1); // Agar miqdor 0 bo'lsa, elementni olib tashlash
                 }
             }
-            saveCart(cart);
+            saveCart(cart); // Savatni saqlash va qayta render qilish
             if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        function updateCartUI(totalItems = 0) {
-            if (totalItems === 0) {
-                const cart = getCart();
-                totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            }
-            
-            const cartCountElement = document.getElementById('cartCount');
-            
-            if (cartCountElement) {
-                cartCountElement.textContent = totalItems;
-                cartCountElement.style.display = totalItems > 0 ? 'flex' : 'none'; 
-            }
-        }
-
         // ----------------------------------------------------
-        // 🔥 YAKUNIY TO'LOV MANTIQI: Manzilni qo'shish va botga yuborish
+        // YAKUNIY TO'LOV MANTIQI: Ma'lumotni botga yuborish
         // ----------------------------------------------------
         
         function sendCheckoutData() {
@@ -193,13 +223,13 @@
                 return;
             }
             
-            // 2. Majburiy manzil tekshiruvi
+            // 2. Majburiy manzil tekshiruvi (Profil orqali kiritilgan bo'lishi kerak)
             if (deliveryAddress === "Manzil kiritilmagan" || deliveryAddress.length < 5) {
                 tg.showAlert("Iltimos, avval 'Profilim' bo'limida yetkazib berish manzilini kiriting.");
                 return;
             }
 
-            // 3. Ma'lumotlarni yig'amiz
+            // 3. Ma'lumotlarni yig'ish (Botga yuborish uchun)
             const itemsForBot = cart.map(item => {
                 const product = products.find(p => p.id === item.id);
                 if (product) {
@@ -220,14 +250,13 @@
                 total_price: totalPrice, 
                 items: itemsForBot,
                 order_session_id: Date.now(), 
-                
                 delivery_info: {
                     address: deliveryAddress,
                     details: addressDetails
                 }
             };
             
-            // 5. Ma'lumotni botga yuborish
+            // 5. Ma'lumotni botga yuborish (tg.sendData)
             if (tg.sendData) {
                 tg.sendData(JSON.stringify(checkoutData));
                 
@@ -240,10 +269,12 @@
         // TUGMALARNI ULASH
         document.getElementById('order-btn').onclick = sendCheckoutData;
 
+        // Sahifa to'liq yuklanganda savatchani render qilish
         document.addEventListener('DOMContentLoaded', function() {
             renderCart();
             sessionStorage.setItem('animationShown', 'true');
         });
+        /* ==================== JAVASCRIPT END ==================== */
     </script>
 </body>
 </html>

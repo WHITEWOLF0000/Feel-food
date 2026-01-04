@@ -6,12 +6,15 @@
     <title>FEEL FOOD - Profil</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* CSS USLUBLARI AVVALGI KODDAN O'ZGARIShSIZ QOLDI */
+        /* ========================================================= */
+        /* CSS USLUBLARI */
+        /* ========================================================= */
         :root { --brand-color: #ff5722; --brand-light: #ff7043; --brand-dark: #e64a19; --text-color: #333; --sub-text-color: #6c757d; --bg: #f7f7f7; --white: #fff; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 15px; background-color: var(--bg); font-family: 'Segoe UI', Arial, sans-serif; padding-bottom: 70px; overflow-x: hidden; color: var(--text-color); }
         .page-header { display: flex; align-items: center; margin-top: 15px; margin-bottom: 30px; }
         .back-btn { background: none; border: none; font-size: 24px; color: var(--brand-color); cursor: pointer; padding: 0; margin-right: 10px; transition: transform 0.1s; }
+        .back-btn:active { transform: scale(0.9); }
         .page-title { font-weight: 700; font-size: 26px; color: var(--text-color); margin: 0; }
         .profile-card { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
         .section-title { font-size: 18px; font-weight: 600; color: var(--text-color); margin-bottom: 15px; border-left: 4px solid var(--brand-color); padding-left: 10px; }
@@ -26,6 +29,14 @@
         .list-info small { color: var(--sub-text-color); font-size: 12px; }
         .list-icon { color: var(--brand-color); font-size: 18px; }
         .empty-state { text-align: center; color: #ccc; padding: 20px 0; }
+        
+        /* Manzil shakli uslublari (qo'shildi) */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--text-color); font-size: 14px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; resize: vertical;
+        }
+
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background-color: var(--white); box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); display: flex; justify-content: space-around; align-items: center; padding: 0 10px; z-index: 2000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; padding: 0 20px; }
         .nav-item .icon { font-size: 24px; margin-bottom: 3px;}
@@ -52,17 +63,26 @@
         </div>
         
         <div class="profile-card">
-            <h2 class="section-title">Shaxsiy Ma'lumotlar</h2>
+            <h2 class="section-title">Yetkazib berish manzili</h2>
             
-            <div class="list-item" onclick="tg.showAlert('Manzillarni boshqarish funksiyasi hali qo\'shilmagan.')">
-                <div class="list-info">
-                    <p>Mening manzillarim</p>
-                    <small>Yetkazib berish manzillarini boshqarish</small>
-                </div>
-                <span class="list-icon">&gt;</span>
+            <div class="form-group">
+                <label for="addressText">Manzil (Ko'cha, uy, kvartira)</label>
+                <textarea id="addressText" rows="3" placeholder="Manzilni to'liq kiriting (Majburiy)"></textarea>
             </div>
+            <div class="form-group">
+                <label for="apartmentOrFloor">Qavat/Kvartira raqami/Izoh</label>
+                <input type="text" id="apartmentOrFloor" placeholder="2-qavat, 15-kvartira, yoki bino kodi (ixtiyoriy)">
+            </div>
+            <button id="saveAddressBtn" onclick="saveAddress()" 
+                    style="width:100%; padding: 12px; background: var(--brand-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                Manzilni saqlash
+            </button>
+        </div>
+
+        <div class="profile-card">
+            <h2 class="section-title">Boshqa Ma'lumotlar</h2>
             
-            <div class="list-item" onclick="tg.showAlert('Telefon raqamini tahrirlash funksiyasi hali qo\'shilmagan.')">
+             <div class="list-item" onclick="tg.showAlert('Telefon raqamini tahrirlash funksiyasi hali qo\'shilmagan.')">
                 <div class="list-info">
                     <p>Telefon raqamim</p>
                     <small id="user-phone-display">Raqam aniqlanmagan</small>
@@ -70,14 +90,14 @@
                 <span class="list-icon">&gt;</span>
             </div>
             
-        </div>
-
-        <div class="profile-card">
-            <h2 class="section-title">Buyurtmalar Tarixi</h2>
-            
-            <div class="empty-state">
-                Hozircha faol buyurtmalaringiz yo'q.
+            <div class="list-item" onclick="tg.showAlert('Tarix hali serverda saqlanmayapti.')">
+                <div class="list-info">
+                    <p>Buyurtmalar Tarixi</p>
+                    <small>Oldingi buyurtmalaringiz</small>
+                </div>
+                <span class="list-icon">&gt;</span>
             </div>
+            
         </div>
 
     </div>
@@ -102,7 +122,6 @@
         tg.expand();
 
         function goToIndex() {
-            // Orqaga qaytishdan oldin ham animatsiyani o'chiramiz
             sessionStorage.setItem('animationShown', 'true');
             window.location.href = 'index.html';
         }
@@ -121,6 +140,32 @@
                 cartCountElement.textContent = totalItems;
                 cartCountElement.style.display = totalItems > 0 ? 'flex' : 'none'; 
             }
+        }
+
+        function loadAddressData() {
+            const savedAddress = JSON.parse(localStorage.getItem('feelFoodAddress') || '{}');
+            
+            const addressEl = document.getElementById('addressText');
+            const detailsEl = document.getElementById('apartmentOrFloor');
+            
+            if (addressEl) addressEl.value = savedAddress.address || '';
+            if (detailsEl) detailsEl.value = savedAddress.details || '';
+        }
+
+        function saveAddress() {
+            const address = document.getElementById('addressText').value.trim();
+            const details = document.getElementById('apartmentOrFloor').value.trim();
+            
+            if (address === "") {
+                tg.showAlert("Iltimos, manzilni kiriting.");
+                return;
+            }
+            
+            const addressData = { address, details };
+            localStorage.setItem('feelFoodAddress', JSON.stringify(addressData));
+            
+            tg.showAlert("✅ Manzil muvaffaqiyatli saqlandi!");
+            if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }
 
         function loadUserProfile() {
@@ -143,7 +188,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateCartUI();
             loadUserProfile();
-            // Profil sahifasi yuklanganda ham animatsiyani o'chirib qo'yish
+            loadAddressData(); 
             sessionStorage.setItem('animationShown', 'true');
         });
     </script>

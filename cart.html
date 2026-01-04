@@ -6,38 +6,16 @@
     <title>FEEL FOOD - Savatcha</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* ========================================================= */
-        /* CSS USLUBLARI */
-        /* ========================================================= */
+        /* [ ... CSS uslublari o'zgarishsiz qoladi ... ] */
         :root { --brand-color: #ff5722; --brand-dark: #e64a19; --text-color: #333; --bg: #f7f7f7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 15px; background-color: var(--bg); font-family: Arial, sans-serif; padding-bottom: 220px; overflow-x: hidden; color: var(--text-color); }
         .page-header { display: flex; align-items: center; margin-top: 15px; margin-bottom: 25px;}
-        
-        /* 🔥 ORQAGA TUGMASI (STRELKA) USLUBI */
-        .back-btn { 
-            background: none; 
-            border: none; 
-            font-size: 24px; 
-            color: var(--brand-color); 
-            cursor: pointer; 
-            padding: 0; 
-            margin-right: 10px;
-            transition: transform 0.1s;
-        }
-        .back-btn:active {
-            transform: scale(0.9);
-        }
-        
+        .back-btn { background: none; border: none; font-size: 24px; color: var(--brand-color); cursor: pointer; padding: 0; margin-right: 10px; transition: transform 0.1s; }
+        .back-btn:active { transform: scale(0.9); }
         .page-title { font-weight: bold; font-size: 22px; color: var(--brand-color); margin: 0;}
         .cart-item { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
-        .cart-item img { 
-            width: 70px; 
-            height: 70px; 
-            border-radius: 8px; 
-            object-fit: cover; 
-            border: 1px solid #eee;
-        } 
+        .cart-item img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; } 
         .item-info { flex-grow: 1; }
         .item-info b { display: block; font-size: 15px; color: var(--text-color); margin-bottom: 5px; }
         .item-info span { color: var(--brand-dark); font-weight: bold; font-size: 14px; }
@@ -65,8 +43,7 @@
         <h1 class="page-title">Savatcha</h1>
     </div>
 
-    <div id="cart-items">
-        </div>
+    <div id="cart-items"></div>
 
     <div id="cart-footer" class="cart-summary-fixed" style="display: none;">
         <div class="summary-box">
@@ -120,9 +97,7 @@
             renderCart(); 
         }
         
-        // 🔥 Yuqoridagi strelka bosilganda ishlaydigan funksiya
         function goToIndex() {
-            // Orqaga qaytishdan oldin animatsiyani o'chiramiz
             sessionStorage.setItem('animationShown', 'true');
             window.location.href = 'index.html';
         }
@@ -132,6 +107,7 @@
             const container = document.getElementById('cart-items');
             const footer = document.getElementById('cart-footer');
             let total = 0;
+            let totalItems = 0;
             container.innerHTML = '';
             
             if (cart.length === 0) {
@@ -143,6 +119,7 @@
                     if (product) {
                         const subTotal = product.price * item.quantity;
                         total += subTotal;
+                        totalItems += item.quantity;
                         
                         container.innerHTML += `
                             <div class="cart-item">
@@ -165,7 +142,7 @@
                 footer.style.display = 'block';
             }
             
-            updateCartUI();
+            updateCartUI(totalItems); 
         }
 
         function updateQty(id, delta) {
@@ -183,9 +160,12 @@
             if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        function updateCartUI() {
-            const cart = getCart();
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        function updateCartUI(totalItems = 0) {
+            if (totalItems === 0) {
+                const cart = getCart();
+                totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            }
+            
             const cartCountElement = document.getElementById('cartCount');
             
             if (cartCountElement) {
@@ -193,14 +173,75 @@
                 cartCountElement.style.display = totalItems > 0 ? 'flex' : 'none'; 
             }
         }
+
+        // ----------------------------------------------------
+        // 🔥 YAKUNIY TO'LOV MANTIQI: Manzilni qo'shish va botga yuborish
+        // ----------------------------------------------------
         
-        document.getElementById('order-btn').onclick = function() {
-            tg.showAlert("Buyurtma berish sahifasiga o'tish (Hali qo'shilmagan)...");
-        };
+        function sendCheckoutData() {
+            const cart = getCart();
+            let totalPrice = 0;
+            let totalItems = 0;
+            
+            // 1. Manzilni olish
+            const savedAddress = JSON.parse(localStorage.getItem('feelFoodAddress') || '{}');
+            const deliveryAddress = savedAddress.address || "Manzil kiritilmagan";
+            const addressDetails = savedAddress.details || "";
+
+            if (cart.length === 0) {
+                tg.showAlert("Savatcha bo'sh. Iltimos, mahsulot qo'shing.");
+                return;
+            }
+            
+            // 2. Majburiy manzil tekshiruvi
+            if (deliveryAddress === "Manzil kiritilmagan" || deliveryAddress.length < 5) {
+                tg.showAlert("Iltimos, avval 'Profilim' bo'limida yetkazib berish manzilini kiriting.");
+                return;
+            }
+
+            // 3. Ma'lumotlarni yig'amiz
+            const itemsForBot = cart.map(item => {
+                const product = products.find(p => p.id === item.id);
+                if (product) {
+                    totalPrice += item.quantity * product.price;
+                    totalItems += item.quantity;
+                    return { 
+                        id: item.id, 
+                        name: product.name, 
+                        quantity: item.quantity, 
+                        price_per_item: product.price 
+                    };
+                }
+            }).filter(item => item); 
+
+            // 4. Botga yuboriladigan yakuniy ma'lumot (JSON)
+            const checkoutData = {
+                total_items: totalItems,
+                total_price: totalPrice, 
+                items: itemsForBot,
+                order_session_id: Date.now(), 
+                
+                delivery_info: {
+                    address: deliveryAddress,
+                    details: addressDetails
+                }
+            };
+            
+            // 5. Ma'lumotni botga yuborish
+            if (tg.sendData) {
+                tg.sendData(JSON.stringify(checkoutData));
+                
+                tg.showAlert("Buyurtma botga yuborildi. Iltimos, Telegramda to'lovni tasdiqlang.");
+            } else {
+                alert("Xato: Telegram Web App aloqasi topilmadi.");
+            }
+        }
+
+        // TUGMALARNI ULASH
+        document.getElementById('order-btn').onclick = sendCheckoutData;
 
         document.addEventListener('DOMContentLoaded', function() {
             renderCart();
-            // Savatcha sahifasi yuklanganda, asosiy sahifaga qaytishda animatsiya ishlamasligi uchun belgilaymiz.
             sessionStorage.setItem('animationShown', 'true');
         });
     </script>
